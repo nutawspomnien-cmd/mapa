@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poznaj świat — 99 państw</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
 <style>
   :root{
     --bg-deep:#120f1e;
@@ -133,7 +134,6 @@
   body.mobile-mode .completion-stats{gap:16px;}
   body.mobile-mode .completion-trophy{font-size:2.8rem;}
 
-  body.mobile-mode #debugStatus{display:none;}
 
   body.mobile-mode #viewMap.active{display:flex;flex-direction:column;gap:14px;}
   body.mobile-mode #viewMap.active > .map-layout{order:-1;}
@@ -467,11 +467,10 @@
 <body>
 
 <div id="globalError" style="display:none;background:#7f1d1d;color:#fff;padding:10px 18px;font-family:monospace;font-size:0.78rem;white-space:pre-wrap;"></div>
-<div id="debugStatus" style="font-size:0.72rem;color:#5b5480;text-align:right;padding:4px 26px 0;">silnik: ładowanie…</div>
 
 <header>
   <div class="brand">
-    <div class="brand-mark">🧭</div>
+    <div class="brand-mark" id="brandMark" title="">🧭</div>
     <div>
       <h1>Poznaj świat</h1>
       <p>99 państw i stolic ze sprawdzianu</p>
@@ -628,7 +627,7 @@
 
 </main>
 
-<footer>Mapa pokazuje prawdziwe granice państw (jeśli biblioteka kartograficzna się załaduje) — w przeciwnym razie automatycznie pokazuje uproszczoną mapę punktową, żeby strona zawsze działała. Postęp zapisywany jest tylko na czas tej sesji.</footer>
+<footer>Postęp i wyniki zapisują się tylko na czas tej sesji — odświeżenie strony zaczyna od nowa. Mapa pokazuje prawdziwe granice państw, gdy tylko jest to możliwe.</footer>
 
 <div id="startOverlay" class="completion-overlay">
   <div class="completion-card">
@@ -637,6 +636,18 @@
     <p>99 państw i stolic ze sprawdzianu. Zgadnij, które państwo zostało zaznaczone na mapie, wpisując jego nazwę i stolicę — im dłuższa seria poprawnych odpowiedzi, tym gorętszy płomień.</p>
     <p style="font-size:0.8rem;color:var(--muted);margin-top:-14px;">Domyślnie grasz na wszystkich 99 państwach — tryb (np. tylko Europa) możesz zmienić w każdej chwili po prawej stronie.</p>
     <button type="button" id="startGameBtn" class="btn primary">Rozpocznij naukę</button>
+  </div>
+</div>
+
+<div id="adminStatsOverlay" class="completion-overlay" style="display:none;">
+  <div class="completion-card">
+    <div class="completion-trophy">📊</div>
+    <h2>Statystyki (tylko dla Ciebie)</h2>
+    <p>Licznik odwiedzin tej strony (łączna liczba wczytań, nie unikalnych osób — patrz wiadomość w czacie po co).</p>
+    <div class="completion-stats">
+      <div><strong id="adminVisitCount">…</strong><span>wczytań łącznie</span></div>
+    </div>
+    <button type="button" id="adminStatsCloseBtn" class="btn primary">Zamknij</button>
   </div>
 </div>
 
@@ -2060,10 +2071,39 @@ window.addEventListener('resize', () => {
   if(!deviceModeManual) setDeviceMode(detectDeviceMode());
 });
 
-const debugStatus = document.getElementById('debugStatus');
-if(debugStatus){
-  debugStatus.textContent = `silnik: gotowy (mapa: ${mapMode === 'borders' ? 'granice państw' : 'punkty'}) — przycisk Sprawdź podłączony`;
-}
+/* ---------------------------------------------------------------
+   Private visit counter: counts page loads only (no personal data,
+   no IP addresses — browsers never expose that to page JavaScript).
+   Revealed only via a secret 5x-click gesture on the logo.
+--------------------------------------------------------------- */
+const VISIT_COUNTER_NAMESPACE = "poznaj-swiat-geo-quiz-app";
+const VISIT_COUNTER_KEY = "page-loads";
+let cachedVisitCount = null;
+fetch(`https://api.countapi.xyz/hit/${VISIT_COUNTER_NAMESPACE}/${VISIT_COUNTER_KEY}`)
+  .then(r => r.ok ? r.json() : null)
+  .then(data => { if(data && typeof data.value === 'number') cachedVisitCount = data.value; })
+  .catch(() => {});
+
+let brandClickCount = 0;
+let brandClickTimer = null;
+document.getElementById('brandMark').addEventListener('click', () => {
+  brandClickCount++;
+  clearTimeout(brandClickTimer);
+  brandClickTimer = setTimeout(() => { brandClickCount = 0; }, 2500);
+  if(brandClickCount >= 5){
+    brandClickCount = 0;
+    document.getElementById('adminVisitCount').textContent = cachedVisitCount !== null ? cachedVisitCount : 'niedostępne (brak połączenia?)';
+    document.getElementById('adminStatsOverlay').style.display = 'flex';
+  }
+});
+document.getElementById('adminStatsCloseBtn').addEventListener('click', () => {
+  document.getElementById('adminStatsOverlay').style.display = 'none';
+});
+document.getElementById('adminStatsOverlay').addEventListener('click', e => {
+  if(e.target.id === 'adminStatsOverlay') document.getElementById('adminStatsOverlay').style.display = 'none';
+});
+
+
 </script>
 </body>
 </html>
