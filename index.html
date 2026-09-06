@@ -2075,13 +2075,20 @@ window.addEventListener('resize', () => {
    Private visit counter: counts page loads only (no personal data,
    no IP addresses — browsers never expose that to page JavaScript).
    Revealed only via a secret 5x-click gesture on the logo.
+   (countapi.xyz, used previously, shut down entirely — switched to
+   countapi.mileshilliard.com, a maintained replacement with the
+   same idea: one public key, incremented on each page load.)
 --------------------------------------------------------------- */
-const VISIT_COUNTER_NAMESPACE = "poznaj-swiat-geo-quiz-app";
-const VISIT_COUNTER_KEY = "page-loads";
+const VISIT_COUNTER_KEY = "poznaj-swiat-geo-quiz-app-visits";
 let cachedVisitCount = null;
-fetch(`https://api.countapi.xyz/hit/${VISIT_COUNTER_NAMESPACE}/${VISIT_COUNTER_KEY}`)
+fetch(`https://countapi.mileshilliard.com/api/v1/hit/${VISIT_COUNTER_KEY}`)
   .then(r => r.ok ? r.json() : null)
-  .then(data => { if(data && typeof data.value === 'number') cachedVisitCount = data.value; })
+  .then(data => {
+    if(data && data.value !== undefined){
+      const n = parseInt(data.value, 10);
+      cachedVisitCount = Number.isNaN(n) ? data.value : n;
+    }
+  })
   .catch(() => {});
 
 let brandClickCount = 0;
