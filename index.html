@@ -87,27 +87,60 @@
   .device-btn.active{background:var(--gold);opacity:1;}
 
   /* ---- mobile mode: bigger touch targets, single-column stacking, simplified quiz form ---- */
+  body.mobile-mode{font-size:15.5px;}
   body.mobile-mode main{padding:14px 12px 40px;}
-  body.mobile-mode header{padding:12px 14px;gap:10px;}
+  body.mobile-mode header{
+    flex-direction:column;align-items:stretch;gap:10px;padding:14px 16px;
+  }
+  body.mobile-mode .brand{justify-content:flex-start;}
   body.mobile-mode .brand p{display:none;}
-  body.mobile-mode .map-layout{grid-template-columns:1fr !important;}
-  body.mobile-mode nav.tabs button{padding:11px 16px;font-size:0.92rem;}
+  body.mobile-mode nav.tabs{width:100%;}
+  body.mobile-mode nav.tabs button{flex:1;padding:12px 10px;font-size:0.92rem;}
+  body.mobile-mode .progress-pill{width:100%;justify-content:space-between;}
+  body.mobile-mode .progress-track{flex:1;}
+  body.mobile-mode .device-toggle{align-self:flex-end;}
+
+  body.mobile-mode .map-layout{grid-template-columns:1fr !important;gap:14px;}
   body.mobile-mode .mark-form{flex-direction:column;align-items:stretch;gap:12px;padding:14px;}
   body.mobile-mode .mark-field{min-width:0;width:100%;}
-  body.mobile-mode .mark-field input{padding:13px 14px;font-size:1rem;}
+  body.mobile-mode .mark-field input{padding:13px 14px;font-size:1rem;scroll-margin-top:300px;}
   body.mobile-mode #quizCheckBtn,
   body.mobile-mode #quizLocateBtn,
   body.mobile-mode #quizSkipBtn{width:100%;padding:13px 16px;font-size:0.95rem;}
   body.mobile-mode .zoom-controls{gap:10px;}
   body.mobile-mode .zoom-btn{width:46px;height:46px;font-size:1.5rem;}
   body.mobile-mode .zoom-btn.small{font-size:0.72rem;}
-  body.mobile-mode #mapContainer{aspect-ratio:960/650;}
-  body.mobile-mode .continent-chip{padding:10px 15px;font-size:0.88rem;}
-  body.mobile-mode .country-row{padding:12px 8px;}
-  body.mobile-mode .stats-bar{gap:12px 18px;font-size:0.82rem;}
-  body.mobile-mode .flash-controls{flex-wrap:wrap;}
+  body.mobile-mode #mapContainer{aspect-ratio:960/560;max-height:34vh;}
+  body.mobile-mode .map-caption{flex-direction:column;align-items:flex-start;gap:6px;font-size:0.72rem;}
+  body.mobile-mode .legend{gap:10px;font-size:0.72rem;}
+
+  body.mobile-mode .continent-actions{width:100%;}
+  body.mobile-mode .continent-actions .btn{flex:1;}
+  body.mobile-mode .continent-chip{padding:11px 15px;font-size:0.9rem;}
+  body.mobile-mode .country-list{max-height:48vh;}
+  body.mobile-mode .country-row{padding:13px 8px;}
+  body.mobile-mode .row-check{width:24px;height:24px;}
+
+  body.mobile-mode .stats-bar{gap:10px 16px;font-size:0.8rem;}
+  body.mobile-mode .flash-panel{padding:20px 16px;}
+  body.mobile-mode .flash-mode-btn{padding:9px 16px;font-size:0.85rem;}
+  body.mobile-mode .flashcard{max-width:100%;height:200px;}
+  body.mobile-mode .flash-controls{flex-wrap:wrap;width:100%;}
   body.mobile-mode .flash-controls .btn{flex:1;min-width:100px;}
+  body.mobile-mode .flashtype-input{max-width:100%;}
+
+  body.mobile-mode .completion-card{padding:28px 22px;}
+  body.mobile-mode .completion-stats{gap:16px;}
+  body.mobile-mode .completion-trophy{font-size:2.8rem;}
+
   body.mobile-mode #debugStatus{display:none;}
+
+  body.mobile-mode #viewMap.active{display:flex;flex-direction:column;gap:14px;}
+  body.mobile-mode #viewMap.active > .map-layout{order:-1;}
+  body.mobile-mode .map-card{
+    position:sticky;top:8px;z-index:15;
+    box-shadow:0 14px 26px rgba(0,0,0,0.5);
+  }
 
   main{padding:22px 26px 60px;max-width:1400px;margin:0 auto;}
   .view{display:none;}
@@ -380,9 +413,9 @@
   footer{text-align:center;color:var(--muted);font-size:0.75rem;padding:18px 0 30px;}
 
   .completion-overlay{
-    position:fixed;inset:0;background:rgba(8,6,16,0.78);backdrop-filter:blur(3px);
+    position:fixed;inset:0;background:rgba(6,4,12,0.94);backdrop-filter:blur(6px);
     display:flex;align-items:center;justify-content:center;z-index:200;
-    animation:overlayFadeIn .25s ease;overflow:hidden;
+    animation:overlayFadeIn .25s ease;overflow:hidden;padding:16px;
   }
   @keyframes overlayFadeIn{ from{opacity:0;} to{opacity:1;} }
   .completion-card{
@@ -502,7 +535,7 @@
             <span><i class="swatch learned"></i> opanowane</span>
             <span><i class="swatch asking"></i> obecnie pytane</span>
           </div>
-          <span>scroll / przyciski = zoom, przeciąganie = przesuwanie</span>
+          <span id="mapHintText">scroll / przyciski = zoom, przeciąganie = przesuwanie</span>
         </div>
       </div>
 
@@ -995,9 +1028,41 @@ function buildDotsMap(container){
   svgEl.addEventListener('mousedown', e => pointerDown(e.clientX, e.clientY));
   window.addEventListener('mousemove', e => pointerMove(e.clientX, e.clientY));
   window.addEventListener('mouseup', pointerUp);
-  svgEl.addEventListener('touchstart', e => { const t=e.touches[0]; pointerDown(t.clientX, t.clientY); }, {passive:true});
-  svgEl.addEventListener('touchmove', e => { const t=e.touches[0]; pointerMove(t.clientX, t.clientY); }, {passive:true});
-  svgEl.addEventListener('touchend', pointerUp);
+  let lastPinchDist = null;
+  function touchDistance(t1, t2){
+    const dx = t1.clientX - t2.clientX, dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+  }
+  function touchMid(t1, t2){
+    return { clientX: (t1.clientX + t2.clientX) / 2, clientY: (t1.clientY + t2.clientY) / 2 };
+  }
+  svgEl.addEventListener('touchstart', e => {
+    if(e.touches.length === 2){
+      lastPinchDist = touchDistance(e.touches[0], e.touches[1]);
+      dragging = false;
+    }else if(e.touches.length === 1){
+      lastPinchDist = null;
+      pointerDown(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, {passive:true});
+  svgEl.addEventListener('touchmove', e => {
+    if(e.touches.length === 2){
+      const dist = touchDistance(e.touches[0], e.touches[1]);
+      if(lastPinchDist){
+        const factor = dist / lastPinchDist;
+        const mid = touchMid(e.touches[0], e.touches[1]);
+        const svgMid = clientToSvg(mid.clientX, mid.clientY);
+        zoomAt(svgMid.x, svgMid.y, factor, false);
+      }
+      lastPinchDist = dist;
+    }else if(e.touches.length === 1 && lastPinchDist === null){
+      pointerMove(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, {passive:true});
+  svgEl.addEventListener('touchend', e => {
+    if(e.touches.length < 2) lastPinchDist = null;
+    if(e.touches.length === 0) pointerUp();
+  });
 
   refreshAll();
 }
@@ -1901,15 +1966,28 @@ document.getElementById("flashModeTypeBtn").addEventListener("click", () => {
 rebuildFlashcardDeck(false);
 renderFlashcard();
 
+let deviceModeManual = false;
+function detectDeviceMode(){
+  return ((window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || window.innerWidth < 700)
+    ? 'mobile' : 'desktop';
+}
 function setDeviceMode(mode){
   document.body.classList.toggle('mobile-mode', mode === 'mobile');
   document.getElementById('deviceDesktopBtn').classList.toggle('active', mode === 'desktop');
   document.getElementById('deviceMobileBtn').classList.toggle('active', mode === 'mobile');
+  const hint = document.getElementById('mapHintText');
+  if(hint){
+    hint.textContent = mode === 'mobile'
+      ? 'uszczypnij, aby przybliżyć • przeciągnij, aby przesunąć'
+      : 'scroll / przyciski = zoom, przeciąganie = przesuwanie';
+  }
 }
-document.getElementById('deviceDesktopBtn').addEventListener('click', () => setDeviceMode('desktop'));
-document.getElementById('deviceMobileBtn').addEventListener('click', () => setDeviceMode('mobile'));
-const likelyTouchDevice = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || window.innerWidth < 700;
-setDeviceMode(likelyTouchDevice ? 'mobile' : 'desktop');
+document.getElementById('deviceDesktopBtn').addEventListener('click', () => { deviceModeManual = true; setDeviceMode('desktop'); });
+document.getElementById('deviceMobileBtn').addEventListener('click', () => { deviceModeManual = true; setDeviceMode('mobile'); });
+setDeviceMode(detectDeviceMode());
+window.addEventListener('resize', () => {
+  if(!deviceModeManual) setDeviceMode(detectDeviceMode());
+});
 
 const debugStatus = document.getElementById('debugStatus');
 if(debugStatus){
