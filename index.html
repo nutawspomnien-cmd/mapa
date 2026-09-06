@@ -1784,6 +1784,8 @@ document.getElementById("startGameBtn").addEventListener("click", () => {
   gameStarted = true;
   document.getElementById("startOverlay").style.display = "none";
   drawNextQuestion();
+  rebuildFlashcardDeck(false);
+  refreshFlashUI();
 });
 
 /* ---------------------------------------------------------------
