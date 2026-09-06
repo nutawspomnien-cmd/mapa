@@ -644,8 +644,13 @@
     <div class="completion-trophy">🧭</div>
     <h2>Poznaj świat</h2>
     <p>99 państw i stolic ze sprawdzianu. Zgadnij, które państwo zostało zaznaczone na mapie, wpisując jego nazwę i stolicę — im dłuższa seria poprawnych odpowiedzi, tym gorętszy płomień.</p>
-    <p style="font-size:0.8rem;color:var(--muted);margin-top:-14px;">Domyślnie grasz na wszystkich 99 państwach — tryb (np. tylko Europa) możesz zmienić w każdej chwili po prawej stronie.</p>
-    <button type="button" id="startGameBtn" class="btn primary">Rozpocznij naukę</button>
+    <p style="font-size:0.8rem;color:var(--muted);margin:-10px 0 0;">Z jakich kontynentów chcesz się uczyć? Wybór możesz zmienić później w każdej chwili.</p>
+    <div class="continent-actions" style="justify-content:center;">
+      <button type="button" class="btn ghost small" id="startContinentAllBtn">zaznacz wszystkie</button>
+      <button type="button" class="btn ghost small" id="startContinentNoneBtn">odznacz wszystkie</button>
+    </div>
+    <div class="continent-filters" id="startContinentFilters" style="justify-content:center;"></div>
+    <button type="button" id="startGameBtn" class="btn primary" disabled>Rozpocznij naukę</button>
   </div>
 </div>
 
@@ -826,7 +831,7 @@ let askingPl = null;
 const byIso3 = new Map(COUNTRIES.map(c => [c.iso3, c]));
 
 const CONTINENTS = ["Europa", "Azja", "Afryka", "Ameryka Północna", "Ameryka Południowa", "Oceania"];
-let selectedContinents = new Set(CONTINENTS);
+let selectedContinents = new Set();
 
 function freshStats(){ return { correct: 0, total: 0, streak: 0, bestStreak: 0, points: 0, celebrated: false }; }
 const modeStats = {};
@@ -886,25 +891,30 @@ function checkCompletion(){
 function getActiveCountries(){
   return COUNTRIES.filter(c => selectedContinents.has(c.continent));
 }
+let gameStarted = false;
+
 function renderContinentFilters(){
-  const box = document.getElementById('continentFilters');
-  if(!box) return;
-  box.innerHTML = '';
-  CONTINENTS.forEach(cont => {
-    const count = COUNTRIES.filter(c => c.continent === cont).length;
-    const chip = document.createElement('button');
-    chip.type = 'button';
-    chip.className = 'continent-chip' + (selectedContinents.has(cont) ? ' active' : '');
-    chip.textContent = `${cont} (${count})`;
-    chip.addEventListener('click', () => {
-      if(selectedContinents.has(cont)) selectedContinents.delete(cont);
-      else selectedContinents.add(cont);
-      onContinentSelectionChanged();
+  const boxes = [document.getElementById('continentFilters'), document.getElementById('startContinentFilters')].filter(Boolean);
+  boxes.forEach(box => {
+    box.innerHTML = '';
+    CONTINENTS.forEach(cont => {
+      const count = COUNTRIES.filter(c => c.continent === cont).length;
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'continent-chip' + (selectedContinents.has(cont) ? ' active' : '');
+      chip.textContent = `${cont} (${count})`;
+      chip.addEventListener('click', () => {
+        if(selectedContinents.has(cont)) selectedContinents.delete(cont);
+        else selectedContinents.add(cont);
+        onContinentSelectionChanged();
+      });
+      box.appendChild(chip);
     });
-    box.appendChild(chip);
   });
   const modeLabel = document.getElementById('currentModeLabel');
   if(modeLabel) modeLabel.textContent = currentModeKey();
+  const startBtn = document.getElementById('startGameBtn');
+  if(startBtn) startBtn.disabled = selectedContinents.size === 0;
 }
 function onContinentSelectionChanged(){
   renderContinentFilters();
@@ -912,6 +922,7 @@ function onContinentSelectionChanged(){
   renderList(document.getElementById('searchInput').value);
   updateProgress();
   updateStatsText();
+  if(!gameStarted) return;
   drawNextQuestion();
   rebuildFlashcardDeck(true);
   refreshFlashUI();
@@ -1769,6 +1780,8 @@ document.getElementById("quizSkipBtn").addEventListener("click", () => {
 
 setQuizInputsEnabled(false);
 document.getElementById("startGameBtn").addEventListener("click", () => {
+  if(selectedContinents.size === 0) return;
+  gameStarted = true;
   document.getElementById("startOverlay").style.display = "none";
   drawNextQuestion();
 });
@@ -1870,6 +1883,14 @@ document.getElementById("continentAllBtn").addEventListener("click", () => {
   onContinentSelectionChanged();
 });
 document.getElementById("continentNoneBtn").addEventListener("click", () => {
+  selectedContinents = new Set();
+  onContinentSelectionChanged();
+});
+document.getElementById("startContinentAllBtn").addEventListener("click", () => {
+  selectedContinents = new Set(CONTINENTS);
+  onContinentSelectionChanged();
+});
+document.getElementById("startContinentNoneBtn").addEventListener("click", () => {
   selectedContinents = new Set();
   onContinentSelectionChanged();
 });
