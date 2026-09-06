@@ -234,6 +234,16 @@
   }
   .suggestion-item .flag{font-size:1rem;}
   .suggestion-item:hover, .suggestion-item.highlighted{background:rgba(139,92,246,0.2);}
+
+  .settings-wrap{position:relative;flex-shrink:0;}
+  .settings-panel{
+    position:absolute;top:calc(100% + 6px);right:0;z-index:25;min-width:230px;
+    background:var(--bg-panel-2);border:1px solid rgba(139,92,246,0.35);border-radius:var(--radius-s);
+    padding:12px 14px;box-shadow:0 10px 24px rgba(0,0,0,0.45);
+    display:flex;flex-direction:column;gap:9px;
+  }
+  .settings-check{display:flex;align-items:center;gap:9px;font-size:0.85rem;cursor:pointer;color:var(--cream);}
+  .settings-check input{width:17px;height:17px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;}
   .btn:disabled{opacity:0.5;cursor:default;}
   .mark-feedback{width:100%;font-size:0.84rem;min-height:18px;}
   .mark-feedback.ok{color:var(--ok);}
@@ -496,13 +506,21 @@
           <div style="font-size:0.74rem;color:var(--muted);">Zaznaczone na mapie — zgadnij, jakie to państwo</div>
           <div class="serif" style="font-size:1.1rem;font-weight:600;">Które to państwo?</div>
         </div>
+        <div class="settings-wrap" style="margin-left:auto;">
+          <button type="button" id="settingsBtn" class="btn ghost small" title="Ustawienia quizu" aria-label="Ustawienia quizu">⚙️</button>
+          <div id="settingsPanel" class="settings-panel" style="display:none;">
+            <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Co trzeba wpisać</div>
+            <label class="settings-check"><input type="checkbox" id="requireCountryCheck" checked> Wymagaj wpisania państwa</label>
+            <label class="settings-check"><input type="checkbox" id="requireCapitalCheck" checked> Wymagaj wpisania stolicy</label>
+          </div>
+        </div>
       </div>
-      <div class="mark-field" style="position:relative;">
+      <div class="mark-field" id="countryField" style="position:relative;">
         <label for="quizCountryInput">Państwo</label>
         <input type="text" id="quizCountryInput" placeholder="wpisz państwo (bez ogonków też działa)" autofocus autocomplete="off">
         <div id="countrySuggestions" class="suggestions-dropdown"></div>
       </div>
-      <div class="mark-field">
+      <div class="mark-field" id="capitalField">
         <label for="quizCapitalInput">Stolica</label>
         <input type="text" id="quizCapitalInput" placeholder="wpisz stolicę">
       </div>
@@ -1464,7 +1482,10 @@ function drawNextQuestion(){
     awaitingAdvance = false;
     setQuizInputsEnabled(!!quizCurrent);
     const countryInput = document.getElementById("quizCountryInput");
-    if(countryInput && quizCurrent) countryInput.focus();
+    if(quizCurrent){
+      const toFocus = requireCountry ? countryInput : document.getElementById("quizCapitalInput");
+      if(toFocus) toFocus.focus();
+    }
   }
 }
 
@@ -1526,44 +1547,58 @@ const quizForm = document.getElementById("quizForm");
 const quizFeedback = document.getElementById("quizFeedback");
 
 let wrongCountryAttempts = 0;
+let requireCountry = true;
+let requireCapital = true;
+
+function applyFieldVisibility(){
+  document.getElementById("countryField").style.display = requireCountry ? "" : "none";
+  document.getElementById("capitalField").style.display = requireCapital ? "" : "none";
+}
 
 function checkAnswer(){
   if(!quizCurrent || awaitingAdvance) return;
   const countryVal = document.getElementById("quizCountryInput").value;
   const capitalVal = document.getElementById("quizCapitalInput").value;
 
-  const typedCountry = findCountry(countryVal);
-  if(!typedCountry){
-    quizFeedback.textContent = `Nie znaleziono państwa „${countryVal}” na liście 99 państw — sprawdź pisownię.`;
-    quizFeedback.className = "mark-feedback bad";
-    return;
-  }
-  if(typedCountry.pl !== quizCurrent.pl){
-    wrongCountryAttempts++;
-    const s = currentStats();
-    if(s.streak > 0){
-      s.streak = 0;
-      updateStatsText();
+  let typedCountry = null;
+  if(requireCountry){
+    if(!countryVal.trim()) return;
+    typedCountry = findCountry(countryVal);
+    if(!typedCountry){
+      quizFeedback.textContent = `Nie znaleziono państwa „${countryVal}” na liście 99 państw — sprawdź pisownię.`;
+      quizFeedback.className = "mark-feedback bad";
+      return;
     }
-    if(wrongCountryAttempts >= 2){
-      quizFeedback.textContent = `„${typedCountry.pl}” to prawidłowe państwo, ale to nie to, które jest teraz zaznaczone na mapie (szukaj zielonej, pulsującej plamki — możesz też kliknąć „Przybliż to miejsce”). Podpowiedź: zaznaczone państwo to ${quizCurrent.flag} ${quizCurrent.pl}. Wpisz je i podaj stolicę.`;
-    }else{
-      quizFeedback.textContent = `„${typedCountry.pl}” to prawidłowe państwo, ale to nie to, które jest teraz zaznaczone na mapie. Poszukaj zielonej, pulsującej plamki i spróbuj jeszcze raz.`;
+    if(typedCountry.pl !== quizCurrent.pl){
+      wrongCountryAttempts++;
+      const s = currentStats();
+      if(s.streak > 0){
+        s.streak = 0;
+        updateStatsText();
+      }
+      if(wrongCountryAttempts >= 2){
+        quizFeedback.textContent = `„${typedCountry.pl}” to prawidłowe państwo, ale to nie to, które jest teraz zaznaczone na mapie (szukaj zielonej, pulsującej plamki — możesz też kliknąć „Przybliż to miejsce”). Podpowiedź: zaznaczone państwo to ${quizCurrent.flag} ${quizCurrent.pl}. ${requireCapital ? 'Wpisz je i podaj stolicę.' : 'Wpisz je, aby zaliczyć.'}`;
+      }else{
+        quizFeedback.textContent = `„${typedCountry.pl}” to prawidłowe państwo, ale to nie to, które jest teraz zaznaczone na mapie. Poszukaj zielonej, pulsującej plamki i spróbuj jeszcze raz.`;
+      }
+      quizFeedback.className = "mark-feedback bad";
+      return;
     }
-    quizFeedback.className = "mark-feedback bad";
-    return;
   }
-  if(!capitalVal.trim()){
-    quizFeedback.textContent = `Dobrze, to ${typedCountry.pl} — teraz wpisz jego stolicę.`;
-    quizFeedback.className = "mark-feedback";
-    document.getElementById("quizCapitalInput").focus();
+  if(requireCapital && !capitalVal.trim()){
+    if(requireCountry){
+      quizFeedback.textContent = `Dobrze, to ${typedCountry.pl} — teraz wpisz jego stolicę.`;
+      quizFeedback.className = "mark-feedback";
+      document.getElementById("quizCapitalInput").focus();
+    }
     return;
   }
 
   const s = currentStats();
   s.total++;
   updateStatsText(); popStat('quizScoreText');
-  if(capitalIsCorrect(quizCurrent, capitalVal)){
+  const capitalOk = requireCapital ? capitalIsCorrect(quizCurrent, capitalVal) : true;
+  if(capitalOk){
     awaitingAdvance = true;
     setQuizInputsEnabled(false);
     armWatchdog();
@@ -1588,12 +1623,48 @@ function checkAnswer(){
   }else{
     s.streak = 0;
     updateStatsText();
-    quizFeedback.textContent = `Państwo zgadza się, ale to nie jest poprawna stolica. Spróbuj jeszcze raz.`;
+    quizFeedback.textContent = `To nie jest poprawna stolica dla ${quizCurrent.pl}. Spróbuj jeszcze raz.`;
     quizFeedback.className = "mark-feedback bad";
     document.getElementById("quizCapitalInput").value = "";
     document.getElementById("quizCapitalInput").focus();
   }
 }
+
+document.getElementById("settingsBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  const panel = document.getElementById("settingsPanel");
+  panel.style.display = panel.style.display === "none" ? "flex" : "none";
+});
+document.addEventListener("click", e => {
+  const wrap = document.querySelector(".settings-wrap");
+  const panel = document.getElementById("settingsPanel");
+  if(panel.style.display !== "none" && wrap && !wrap.contains(e.target)){
+    panel.style.display = "none";
+  }
+});
+document.getElementById("requireCountryCheck").addEventListener("change", e => {
+  if(!e.target.checked && !requireCapital){
+    e.target.checked = true;
+    return;
+  }
+  requireCountry = e.target.checked;
+  applyFieldVisibility();
+  document.getElementById("quizCountryInput").value = "";
+  wrongCountryAttempts = 0;
+  quizFeedback.textContent = "";
+  quizFeedback.className = "mark-feedback";
+});
+document.getElementById("requireCapitalCheck").addEventListener("change", e => {
+  if(!e.target.checked && !requireCountry){
+    e.target.checked = true;
+    return;
+  }
+  requireCapital = e.target.checked;
+  applyFieldVisibility();
+  document.getElementById("quizCapitalInput").value = "";
+  quizFeedback.textContent = "";
+  quizFeedback.className = "mark-feedback";
+});
 
 function tabCompleteFromCandidates(inputEl, candidates){
   const typed = inputEl.value;
