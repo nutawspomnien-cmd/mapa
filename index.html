@@ -179,6 +179,15 @@
   }
   .zoom-btn:hover{border-color:var(--gold);color:var(--gold-bright);}
   .zoom-btn.small{font-size:0.68rem;height:auto;padding:5px 2px;}
+  .zoom-btn.locate-btn{
+    background:rgba(52,211,153,0.18);border-color:var(--ok);
+    animation:locateBtnPulse 1.6s ease-in-out infinite;
+  }
+  .zoom-btn.locate-btn:hover{background:rgba(52,211,153,0.32);}
+  @keyframes locateBtnPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(52,211,153,0.45); }
+    50%{ box-shadow:0 0 0 6px rgba(52,211,153,0); }
+  }
 
   .map-caption{display:flex;justify-content:space-between;align-items:center;padding:10px 6px 2px;font-size:0.78rem;color:var(--muted);flex-wrap:wrap;gap:6px;}
   .legend{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
@@ -542,6 +551,7 @@
           <div id="mapPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#5b5480;font-size:0.9rem;">Rysowanie mapy…</div>
         </div>
         <div class="zoom-controls">
+          <button type="button" class="zoom-btn locate-btn" id="mapLocateBtn" title="znajdź pytane państwo" aria-label="Znajdź pytane państwo">🎯</button>
           <button type="button" class="zoom-btn" id="zoomInBtn" title="przybliż" aria-label="Przybliż mapę">＋</button>
           <button type="button" class="zoom-btn" id="zoomOutBtn" title="oddal" aria-label="Oddal mapę">－</button>
           <button type="button" class="zoom-btn small" id="zoomResetBtn" title="reset widoku" aria-label="Zresetuj przybliżenie mapy">reset</button>
@@ -1127,6 +1137,7 @@ function refreshAll(){
         zoomG.appendChild(el('circle', { cx:x, cy:y, r:7, class:'asking-ring', id:'askingRing' }));
       }
     }
+    updateAskingMarkerScale();
   }else if(mapMode === 'borders' && mapInstance){
     try{
       const data = {};
@@ -1153,8 +1164,21 @@ function flashPin(pl){
 }
 
 /* ---- pan & zoom: dots-mode primitives ---- */
+function updateAskingMarkerScale(){
+  if(mapMode !== 'dots') return;
+  const inv = 1 / view.scale;
+  const applyInverseScale = elx => {
+    if(!elx) return;
+    elx.style.transformBox = 'fill-box';
+    elx.style.transformOrigin = 'center';
+    elx.style.transform = `scale(${inv})`;
+  };
+  applyInverseScale(zoomG.querySelector('.pin.asking'));
+  applyInverseScale(document.getElementById('askingRing'));
+}
 function applyView(){
   zoomG.setAttribute('transform', `translate(${view.tx},${view.ty}) scale(${view.scale})`);
+  updateAskingMarkerScale();
 }
 function animateView(target, duration = 800){
   const from = { ...view };
@@ -1246,6 +1270,9 @@ function flyToCountry(country){
 document.getElementById('zoomInBtn').addEventListener('click', () => zoomStep(1.5));
 document.getElementById('zoomOutBtn').addEventListener('click', () => zoomStep(1/1.5));
 document.getElementById('zoomResetBtn').addEventListener('click', zoomReset);
+document.getElementById('mapLocateBtn').addEventListener('click', () => {
+  if(quizCurrent) flyToCountry(quizCurrent);
+});
 
 /* ---------------------------------------------------------------
    PROGRESS
