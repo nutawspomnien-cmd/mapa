@@ -3,18 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Poznaj świat — 99 państw</title>
+<title>Poznaj świat: 99 państw</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
+<script>
+/* Set the day/night theme before first paint, so the page never flashes the
+   wrong one. Mirrors the fuller logic near the end of the main script. */
+(function(){
+  try{
+    var mode = localStorage.getItem('poznajSwiatTheme') || 'auto';
+    var hour = new Date().getHours();
+    var effective = mode === 'auto' ? ((hour >= 8 && hour < 21) ? 'light' : 'dark') : mode;
+    document.documentElement.setAttribute('data-theme', effective);
+  }catch(e){
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
 <style>
   :root{
-    --bg-deep:#120f1e;
-    --bg-panel:#1c1830;
-    --bg-panel-2:#241f3d;
-    --land:#2a2447;
+    --bg-deep:#0d0b17;
+    --ink:#0d0b17;
+    --bg-panel:#191527;
+    --bg-panel-2:#211c33;
+    --bg-panel-2-rgb:33,28,51;
+    --land:#2b2440;
+    --ocean:#0b0915;
+    --brand-glow:#2f2354;
     --gold:#8b5cf6;
-    --gold-bright:#a78bfa;
-    --cream:#f4f2fb;
-    --muted:#9c94b8;
+    --gold-rgb:139,92,246;
+    --gold-bright:#b4a1fa;
+    --cream:#f1eef9;
+    --muted:#9691ac;
     --ok:#34d399;
     --bad:#fb7185;
     --target:#22d3ee;
@@ -36,17 +55,29 @@
   }
   h1,h2,h3,.serif{font-family:Georgia,'Times New Roman',serif;}
 
+  /* Smooth cross-fade when switching Dzień/Auto/Noc, instead of a hard
+     snap. Scoped to chrome elements only (not the map's ~99 dots) so it
+     costs nothing on slower phones, and limited to color-ish properties
+     so it never fights the transform/opacity keyframe animations below. */
+  body, header, .brand-mark, nav.tabs, nav.tabs button, .progress-pill,
+  .progress-track, .device-toggle, .map-card, .zoom-btn, .mark-form,
+  .mark-field input, .suggestions-dropdown, .settings-panel, .side-card,
+  .search-box, .continent-chip, .row-check, .flash-panel, .flashtype-input,
+  .btn, .flash-mode-btn, .theme-mode-btn, .completion-overlay, .completion-card{
+    transition:background-color .3s ease, color .3s ease, border-color .3s ease, box-shadow .3s ease;
+  }
+
   header{
     display:flex;align-items:center;justify-content:space-between;gap:16px;
-    padding:18px 26px;border-bottom:1px solid rgba(139,92,246,0.22);
-    background:linear-gradient(180deg, rgba(28,24,48,0.9), rgba(18,15,30,0.9));
+    padding:18px 26px;border-bottom:1px solid rgba(var(--gold-rgb),0.22);
+    background:linear-gradient(180deg, var(--bg-panel), var(--bg-deep));
     flex-wrap:wrap;
   }
   .brand{display:flex;align-items:center;gap:12px;}
   .brand-mark{
     width:38px;height:38px;border-radius:50%;
-    background:radial-gradient(circle at 32% 30%, #4c3d7a, #120f1e 72%);
-    border:1px solid rgba(139,92,246,0.45);
+    background:radial-gradient(circle at 32% 30%, var(--brand-glow), var(--bg-deep) 72%);
+    border:1px solid rgba(var(--gold-rgb),0.45);
     display:flex;align-items:center;justify-content:center;font-size:18px;
   }
   .brand h1{font-size:1.35rem;font-weight:600;margin:0;letter-spacing:0.2px;}
@@ -58,7 +89,7 @@
     padding:8px 18px;border-radius:999px;font-family:inherit;font-size:0.88rem;font-weight:600;
     cursor:pointer;transition:background .2s ease,color .2s ease;
   }
-  nav.tabs button.active{background:var(--gold);color:#ffffff;}
+  nav.tabs button.active{background:var(--gold);color:var(--ink);}
   nav.tabs button:hover:not(.active){color:var(--cream);}
 
   .progress-pill{
@@ -151,8 +182,8 @@
   @media (max-width:900px){.map-layout{grid-template-columns:1fr;}}
 
   .map-card{
-    background:radial-gradient(ellipse at 50% 30%, #241f3d 0%, #120f1e 78%);
-    border:1px solid rgba(139,92,246,0.2);border-radius:var(--radius-m);
+    background:radial-gradient(ellipse at 50% 30%, var(--bg-panel-2) 0%, var(--bg-deep) 78%);
+    border:1px solid rgba(var(--gold-rgb),0.2);border-radius:var(--radius-m);
     padding:14px;position:relative;overflow:hidden;
     box-shadow:0 12px 32px rgba(0,0,0,0.35);
   }
@@ -174,8 +205,8 @@
   .zoom-controls{position:absolute;top:22px;right:22px;display:flex;flex-direction:column;gap:6px;z-index:5;}
   .zoom-btn{
     width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,0.14);
-    background:rgba(28,24,48,0.85);color:var(--cream);font-size:1.15rem;line-height:1;
-    cursor:pointer;backdrop-filter:blur(4px);transition:border-color .15s ease,color .15s ease;
+    background:rgba(var(--bg-panel-2-rgb),0.94);color:var(--cream);font-size:1.15rem;line-height:1;
+    cursor:pointer;transition:border-color .15s ease,color .15s ease;
   }
   .zoom-btn:hover{border-color:var(--gold);color:var(--gold-bright);}
   .zoom-btn.small{font-size:0.68rem;height:auto;padding:5px 2px;}
@@ -197,7 +228,7 @@
   .swatch.learned{background:var(--learned);}
   .swatch.asking{background:var(--asking);}
 
-  .pin{cursor:pointer;stroke:#120f1e;stroke-width:1px;}
+  .pin{cursor:pointer;stroke:var(--ink);stroke-width:1px;}
   .pin.target{fill:var(--target);}
   .pin.learned{fill:var(--learned);}
   .pin.asking{
@@ -208,6 +239,13 @@
   .pin.flash{stroke:var(--gold-bright);stroke-width:2.5px;}
   .pin.excluded{fill:var(--land);opacity:0.45;}
   @keyframes pinPulse{ 0%,100%{ r:6px; } 50%{ r:9px; } }
+  /* Borders-mode fallback pins (small countries missing from the map's own
+     shape data) live in a different, unknown coordinate scale, so their
+     pulse is a relative transform:scale() instead of pinPulse's absolute
+     px radius — that stays correct no matter how big a "unit" is here. */
+  .fallback-pin{transform-box:fill-box;transform-origin:center;}
+  .pin.fallback-pin.asking{animation:fallbackPinPulse 1s ease-in-out infinite;}
+  @keyframes fallbackPinPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.5); } }
   .asking-ring{
     fill:none;stroke:var(--asking);stroke-width:2px;opacity:0.85;
     animation:ringExpand 1.4s ease-out infinite;
@@ -234,7 +272,7 @@
   .mark-field input:disabled{opacity:0.5;}
   .suggestions-dropdown{
     display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;z-index:20;
-    background:var(--bg-panel-2);border:1px solid rgba(139,92,246,0.35);border-radius:var(--radius-s);
+    background:var(--bg-panel-2);border:1px solid rgba(var(--gold-rgb),0.35);border-radius:var(--radius-s);
     box-shadow:0 10px 24px rgba(0,0,0,0.4);max-height:240px;overflow-y:auto;
   }
   .suggestions-dropdown.show{display:block;}
@@ -242,21 +280,35 @@
     padding:8px 12px;font-size:0.86rem;cursor:pointer;display:flex;align-items:center;gap:8px;
   }
   .suggestion-item .flag{font-size:1rem;}
-  .suggestion-item:hover, .suggestion-item.highlighted{background:rgba(139,92,246,0.2);}
+  .suggestion-item:hover, .suggestion-item.highlighted{background:rgba(var(--gold-rgb),0.2);}
 
   .settings-wrap{position:relative;flex-shrink:0;}
   .settings-panel{
     position:absolute;top:calc(100% + 6px);right:0;z-index:25;min-width:230px;
-    background:var(--bg-panel-2);border:1px solid rgba(139,92,246,0.35);border-radius:var(--radius-s);
+    background:var(--bg-panel-2);border:1px solid rgba(var(--gold-rgb),0.35);border-radius:var(--radius-s);
     padding:12px 14px;box-shadow:0 10px 24px rgba(0,0,0,0.45);
     display:flex;flex-direction:column;gap:9px;
   }
   .settings-check{display:flex;align-items:center;gap:9px;font-size:0.85rem;cursor:pointer;color:var(--cream);}
   .settings-check input{width:17px;height:17px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;}
+  .ratio-row input[type="range"]{width:100%;accent-color:var(--gold);cursor:pointer;display:block;}
+  .ratio-labels{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:0.68rem;color:var(--muted);margin-top:2px;}
+  .ratio-labels strong{color:var(--gold-bright);font-size:0.76rem;white-space:nowrap;}
   .btn:disabled{opacity:0.5;cursor:default;}
   .mark-feedback{width:100%;font-size:0.84rem;min-height:18px;}
   .mark-feedback.ok{color:var(--ok);}
   .mark-feedback.bad{color:var(--bad);}
+  .mark-feedback.flash-in{animation:feedbackIn .25s ease;}
+  @keyframes feedbackIn{ from{opacity:0;transform:translateY(-3px);} to{opacity:1;transform:translateY(0);} }
+
+  .mark-field input.shake{animation:inputShake .32s ease;}
+  @keyframes inputShake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-6px);}
+    40%{transform:translateX(5px);}
+    60%{transform:translateX(-4px);}
+    80%{transform:translateX(3px);}
+  }
 
   .reveal-card{
     width:100%;display:flex;align-items:center;gap:14px;
@@ -369,8 +421,13 @@
     border-radius:999px;padding:6px 12px;font-size:0.78rem;font-family:inherit;font-weight:600;
     cursor:pointer;transition:all .15s ease;
   }
-  .continent-chip.active{background:rgba(139,92,246,0.18);border-color:var(--gold);color:var(--cream);}
+  .continent-chip.active{background:rgba(var(--gold-rgb),0.18);border-color:var(--gold);color:var(--cream);}
   .continent-chip:hover{border-color:var(--gold);}
+  .review-mode-btn{align-self:flex-start;margin-top:-2px;}
+  .review-mode-btn.active{background:rgba(var(--gold-rgb),0.18);border-color:var(--gold);color:var(--cream);}
+  .review-mode-btn:disabled{opacity:0.4;cursor:default;}
+  .review-mode-btn:disabled:hover{border-color:rgba(255,255,255,0.18);color:var(--cream);}
+  [data-theme="light"] .review-mode-btn:disabled:hover{border-color:rgba(var(--ink-rgb),0.18);}
   .country-list{overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding-right:2px;}
   .continent-header{
     display:flex;justify-content:space-between;align-items:center;
@@ -380,14 +437,14 @@
   .continent-header:first-child{padding-top:2px;}
   .continent-header-count{color:var(--muted);font-weight:600;text-transform:none;letter-spacing:normal;font-size:0.72rem;}
   .country-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 8px;border-radius:var(--radius-s);cursor:pointer;border:1px solid transparent;}
-  .country-row:hover{background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.25);}
+  .country-row:hover{background:rgba(var(--gold-rgb),0.1);border-color:rgba(var(--gold-rgb),0.25);}
   .country-row .cinfo{display:flex;align-items:center;gap:8px;min-width:0;}
   .country-row .flag{font-size:1.05rem;}
   .country-row .names{min-width:0;}
   .country-row .names .name{font-size:0.87rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .country-row .names .cap{font-size:0.74rem;color:var(--muted);}
   .row-check{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.25);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:transparent;transition:all .15s ease;}
-  .row-check.done{background:var(--learned);border-color:var(--learned);color:#120f1e;}
+  .row-check.done{background:var(--learned);border-color:var(--learned);color:var(--ink);}
 
   .flash-panel{
     background:var(--bg-panel);border:1px solid rgba(255,255,255,0.07);border-radius:var(--radius-m);
@@ -400,7 +457,7 @@
     border:none;background:transparent;color:var(--muted);padding:6px 14px;border-radius:999px;
     font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all .15s ease;
   }
-  .flash-mode-btn.active{background:var(--gold);color:#fff;}
+  .flash-mode-btn.active{background:var(--gold);color:var(--ink);}
   .flashtype-question{display:flex;align-items:center;gap:10px;font-size:1.4rem;font-weight:600;}
   .flashtype-input{
     width:100%;max-width:280px;background:var(--bg-panel-2);border:1px solid rgba(255,255,255,0.09);
@@ -413,17 +470,17 @@
   .flashcard-inner{position:relative;width:100%;height:100%;transition:transform .5s cubic-bezier(.4,.2,.2,1);transform-style:preserve-3d;}
   .flashcard.flipped .flashcard-inner{transform:rotateY(180deg);}
   .flashcard-face{position:absolute;inset:0;border-radius:var(--radius-m);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;backface-visibility:hidden;padding:20px;text-align:center;}
-  .flashcard-face.front{background:linear-gradient(160deg,#241f3d,#15112a);border:1px solid rgba(139,92,246,0.35);}
-  .flashcard-face.back{background:linear-gradient(160deg,#123a2e,#0c2620);border:1px solid var(--ok);transform:rotateY(180deg);}
+  .flashcard-face.front{background:linear-gradient(160deg,var(--bg-panel-2),var(--bg-deep));border:1px solid rgba(var(--gold-rgb),0.35);}
+  .flashcard-face.back{background:linear-gradient(160deg,var(--bg-panel-2),var(--bg-deep));border:1px solid var(--ok);transform:rotateY(180deg);}
   .flashcard-face .flag-big{font-size:2.6rem;}
   .flashcard-face .fc-name{font-size:1.5rem;font-weight:600;}
   .flashcard-face .fc-label{font-size:0.72rem;color:var(--muted);}
   .flashcard-face .fc-capital{font-size:1.6rem;font-weight:600;color:var(--ok);}
   .flash-controls{display:flex;gap:10px;align-items:center;}
 
-  .btn{border:none;border-radius:999px;padding:9px 18px;font-family:inherit;font-weight:600;font-size:0.85rem;cursor:pointer;transition:transform .12s ease, background .15s ease;}
+  .btn{border:none;border-radius:10px;padding:9px 18px;font-family:inherit;font-weight:600;font-size:0.85rem;cursor:pointer;transition:transform .12s ease, background .15s ease;}
   .btn:active{transform:scale(0.96);}
-  .btn.primary{background:var(--gold);color:#ffffff;}
+  .btn.primary{background:var(--gold);color:var(--ink);font-weight:700;}
   .btn.primary:hover{background:var(--gold-bright);}
   .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.18);color:var(--cream);}
   .btn.ghost:hover{border-color:var(--gold);color:var(--gold-bright);}
@@ -439,7 +496,7 @@
   @keyframes overlayFadeIn{ from{opacity:0;} to{opacity:1;} }
   .completion-card{
     position:relative;z-index:2;
-    background:linear-gradient(160deg,#241f3d,#15112a);border:1px solid var(--gold);
+    background:linear-gradient(160deg,var(--bg-panel-2),var(--bg-deep));border:1px solid var(--gold);
     border-radius:18px;padding:38px 42px;max-width:420px;width:90%;text-align:center;
     box-shadow:0 24px 60px rgba(0,0,0,0.6);
     animation:completionPop .45s cubic-bezier(.34,1.56,.64,1);
@@ -470,7 +527,115 @@
     100%{ transform:translateY(110vh) rotate(540deg); opacity:0.4; }
   }
   ::-webkit-scrollbar{width:8px;}
-  ::-webkit-scrollbar-thumb{background:rgba(139,92,246,0.35);border-radius:4px;}
+  ::-webkit-scrollbar-thumb{background:rgba(var(--gold-rgb),0.35);border-radius:4px;}
+
+  /* ================================================================
+     DAY MODE ("tryb dzienny") — a clean, rounded, light "SaaS
+     dashboard" look, switched on automatically 8:00-21:00 or by hand
+     in Ustawienia. Everything else keeps the night (dark) look by
+     default; these rules only apply once <html data-theme="light">
+     is set, and only override what actually needs to change for a
+     light background (colors flow through the variables below
+     automatically almost everywhere — these are the few hardcoded
+     literals and shapes that don't).
+     ================================================================ */
+  /* The original "Modern" day palette — clean white surfaces, a single
+     confident blue accent, soft rounded corners. This is the one and
+     only day look now (no more sub-styles to pick between). */
+  [data-theme="light"]{
+    --bg-deep:#eef1f4;
+    --ink:#0f172a;
+    --ink-rgb:15,23,42;
+    --bg-panel:#f9fafb;
+    --bg-panel-2:#eef1f4;
+    --bg-panel-2-rgb:238,241,244;
+    --land:#e2e8f0;
+    --ocean:#eef2f6;
+    --brand-glow:#dbeafe;
+    --gold:#2563eb;
+    --gold-rgb:37,99,235;
+    --gold-bright:#1e40af;
+    --cream:#0f172a;
+    --muted:#64748b;
+    --ok:#15803d;
+    --bad:#dc2626;
+    --target:#0891b2;
+    --learned:#f59e0b;
+    --asking:#15803d;
+    --radius-s:10px;
+    --radius-m:16px;
+  }
+  [data-theme="light"] h1,
+  [data-theme="light"] h2,
+  [data-theme="light"] h3,
+  [data-theme="light"] .serif{ font-family:inherit;font-weight:700;letter-spacing:-0.01em; }
+  [data-theme="light"] .progress-pill strong,
+  [data-theme="light"] .reveal-card .rc-name,
+  [data-theme="light"] .completion-card h2,
+  [data-theme="light"] .completion-stats strong{ font-family:inherit; }
+
+  [data-theme="light"] header{
+    border-bottom:1px solid var(--land);
+    background:var(--bg-panel);
+  }
+  [data-theme="light"] .brand-mark{
+    background:var(--brand-glow);
+    border:none;box-shadow:0 2px 8px rgba(var(--gold-rgb),0.28);
+  }
+  [data-theme="light"] nav.tabs{ border-color:rgba(var(--ink-rgb),0.06); }
+  [data-theme="light"] nav.tabs button.active{ color:#ffffff; }
+  [data-theme="light"] .progress-pill{ border-color:rgba(var(--ink-rgb),0.07); }
+  [data-theme="light"] .progress-track{ background:rgba(var(--ink-rgb),0.08); }
+  [data-theme="light"] .device-toggle{ border-color:rgba(var(--ink-rgb),0.08); }
+
+  [data-theme="light"] .map-card{
+    background:var(--bg-panel);
+    border:1px solid var(--land);
+    box-shadow:0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.08);
+  }
+  [data-theme="light"] body.mobile-mode .map-card{ box-shadow:0 4px 16px rgba(15,23,42,0.1); }
+  [data-theme="light"] .zoom-btn{
+    border-radius:10px;border:1px solid var(--land);
+    background:var(--bg-panel);backdrop-filter:none;
+    box-shadow:0 1px 2px rgba(15,23,42,0.06);
+  }
+
+  [data-theme="light"] .mark-form{ border-color:rgba(var(--ink-rgb),0.07); }
+  [data-theme="light"] .mark-field input{ border-color:rgba(var(--ink-rgb),0.09); }
+  [data-theme="light"] .suggestions-dropdown{ box-shadow:0 4px 16px rgba(15,23,42,0.1); }
+  [data-theme="light"] .settings-panel{ box-shadow:0 4px 16px rgba(15,23,42,0.1); }
+
+  [data-theme="light"] .side-card{
+    border-color:rgba(var(--ink-rgb),0.06);
+    box-shadow:0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.08);
+  }
+  [data-theme="light"] .search-box{ border-color:rgba(var(--ink-rgb),0.08); }
+  [data-theme="light"] .continent-chip{ border-color:rgba(var(--ink-rgb),0.14); }
+  [data-theme="light"] .row-check{ border-color:rgba(var(--ink-rgb),0.25); }
+
+  [data-theme="light"] .flash-panel{
+    border-color:rgba(var(--ink-rgb),0.07);
+    box-shadow:0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.08);
+  }
+  [data-theme="light"] .flashtype-input{ border-color:rgba(var(--ink-rgb),0.09); }
+
+  [data-theme="light"] .btn{ border-radius:12px; }
+  [data-theme="light"] .btn.primary{ color:#ffffff; }
+  [data-theme="light"] .btn.ghost{ border-color:rgba(var(--ink-rgb),0.18); }
+  [data-theme="light"] .flash-mode-btn.active{ color:#ffffff; }
+  [data-theme="light"] .theme-mode-btn.active{ color:#ffffff; }
+
+  [data-theme="light"] .completion-overlay{
+    background:rgba(15,23,42,0.45);backdrop-filter:blur(4px);
+  }
+  [data-theme="light"] .completion-card{
+    border-radius:20px;
+    box-shadow:0 8px 32px rgba(15,23,42,0.16);
+  }
+
+  .theme-mode-toggle{display:flex;gap:4px;background:var(--bg-panel-2);padding:3px;border-radius:999px;margin-top:4px;flex-wrap:wrap;}
+  .theme-mode-btn{border:none;background:transparent;color:var(--muted);padding:6px 10px;border-radius:999px;font-family:inherit;font-size:0.74rem;font-weight:600;cursor:pointer;transition:all .15s ease;}
+  .theme-mode-btn.active{background:var(--gold);color:var(--ink);}
 </style>
 </head>
 <body>
@@ -479,7 +644,7 @@
 
 <header>
   <div class="brand">
-    <div class="brand-mark" id="brandMark" title="">🧭</div>
+    <div class="brand-mark" id="brandMark" title=""><span class="brand-mark-icon">🧭</span></div>
     <div>
       <h1>Poznaj świat</h1>
       <p>99 państw i stolic ze sprawdzianu</p>
@@ -511,7 +676,7 @@
       <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:220px;">
         <span style="font-size:2.1rem;line-height:1;">📍</span>
         <div>
-          <div style="font-size:0.74rem;color:var(--muted);">Zaznaczone na mapie — zgadnij, jakie to państwo</div>
+          <div style="font-size:0.74rem;color:var(--muted);">Zaznaczone na mapie: zgadnij, jakie to państwo</div>
           <div class="serif" style="font-size:1.1rem;font-weight:600;">Które to państwo?</div>
         </div>
         <div class="settings-wrap" style="margin-left:auto;">
@@ -520,6 +685,21 @@
             <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Co trzeba wpisać</div>
             <label class="settings-check"><input type="checkbox" id="requireCountryCheck" checked> Wymagaj wpisania państwa</label>
             <label class="settings-check"><input type="checkbox" id="requireCapitalCheck" checked> Wymagaj wpisania stolicy</label>
+            <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;margin-top:8px;">Ile nowych, ile powtórki</div>
+            <div class="ratio-row">
+              <input type="range" id="newRatioSlider" min="0" max="100" step="5" value="70">
+              <div class="ratio-labels">
+                <span>Testuj / powtarzaj</span>
+                <strong id="newRatioText">70% nowych</strong>
+                <span>Ćwicz nowe</span>
+              </div>
+            </div>
+            <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;margin-top:8px;">Wygląd</div>
+            <div class="theme-mode-toggle" id="themeModeToggle">
+              <button type="button" class="theme-mode-btn" data-mode="auto">Auto</button>
+              <button type="button" class="theme-mode-btn" data-mode="light">Dzień</button>
+              <button type="button" class="theme-mode-btn" data-mode="dark">Noc</button>
+            </div>
           </div>
         </div>
       </div>
@@ -548,7 +728,7 @@
     <div class="map-layout">
       <div class="map-card">
         <div id="mapContainer">
-          <div id="mapPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#5b5480;font-size:0.9rem;">Rysowanie mapy…</div>
+          <div id="mapPlaceholder" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.9rem;">Rysowanie mapy…</div>
         </div>
         <div class="zoom-controls">
           <button type="button" class="zoom-btn locate-btn" id="mapLocateBtn" title="znajdź pytane państwo" aria-label="Znajdź pytane państwo">🎯</button>
@@ -568,13 +748,14 @@
 
       <div class="side-card">
         <h3>Tryb gry</h3>
-        <p style="margin:0;font-size:0.78rem;color:var(--muted);">Zaznacz jeden lub kilka kontynentów, z których losować pytania — każda kombinacja ma własny wynik i punkty.</p>
+        <p style="margin:0;font-size:0.78rem;color:var(--muted);">Zaznacz jeden lub kilka kontynentów, z których losować pytania. Każda kombinacja ma własny wynik i punkty.</p>
         <div class="continent-actions">
           <button type="button" class="btn ghost small" id="continentAllBtn">zaznacz wszystkie</button>
           <button type="button" class="btn ghost small" id="continentNoneBtn">odznacz wszystkie</button>
         </div>
         <div class="continent-filters" id="continentFilters"></div>
         <p style="margin:2px 0 0;font-size:0.74rem;color:var(--muted);">Aktualny tryb: <strong id="currentModeLabel" style="color:var(--gold-bright);">Cały świat</strong></p>
+        <button type="button" class="btn ghost small review-mode-btn" id="reviewModeBtn" disabled>🔁 Tylko błędy (<span id="reviewModeCount">0</span>)</button>
 
         <h3 style="margin-top:6px;">Lista państw</h3>
         <div class="search-box">
@@ -637,13 +818,13 @@
 
 </main>
 
-<footer>Postęp i wyniki zapisują się tylko na czas tej sesji — odświeżenie strony zaczyna od nowa. Mapa pokazuje prawdziwe granice państw, gdy tylko jest to możliwe.</footer>
+<footer>Postęp i wyniki zapisują się tylko na czas tej sesji. Odświeżenie strony zaczyna od nowa. Mapa pokazuje prawdziwe granice państw, gdy tylko jest to możliwe. <span style="opacity:0.5;">— wersja pliku: 2026-09-21 21:05</span></footer>
 
 <div id="startOverlay" class="completion-overlay">
   <div class="completion-card">
     <div class="completion-trophy">🧭</div>
     <h2>Poznaj świat</h2>
-    <p>99 państw i stolic ze sprawdzianu. Zgadnij, które państwo zostało zaznaczone na mapie, wpisując jego nazwę i stolicę — im dłuższa seria poprawnych odpowiedzi, tym gorętszy płomień.</p>
+    <p>99 państw i stolic ze sprawdzianu. Zgadnij, które państwo zostało zaznaczone na mapie, wpisując jego nazwę i stolicę. Im dłuższa seria poprawnych odpowiedzi, tym gorętszy płomień.</p>
     <p style="font-size:0.8rem;color:var(--muted);margin:-10px 0 0;">Z jakich kontynentów chcesz się uczyć? Wybór możesz zmienić później w każdej chwili.</p>
     <div class="continent-actions" style="justify-content:center;">
       <button type="button" class="btn ghost small" id="startContinentAllBtn">zaznacz wszystkie</button>
@@ -658,7 +839,7 @@
   <div class="completion-card">
     <div class="completion-trophy">📊</div>
     <h2>Statystyki (tylko dla Ciebie)</h2>
-    <p>Licznik odwiedzin tej strony (łączna liczba wczytań, nie unikalnych osób — patrz wiadomość w czacie po co).</p>
+    <p>Licznik odwiedzin tej strony: łączna liczba wczytań, nie liczba unikalnych osób. Widoczny tylko tutaj, po sekretnym geście.</p>
     <div class="completion-stats">
       <div><strong id="adminVisitCount">…</strong><span>wczytań łącznie</span></div>
     </div>
@@ -683,7 +864,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.9/topojson.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/datamaps/0.5.9/datamaps.world.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/datamaps/0.5.9/datamaps.world.hires.min.js"></script>
 <script>
 window.addEventListener('error', function(e){
   const box = document.getElementById('globalError');
@@ -827,6 +1008,12 @@ function capitalIsCorrect(country, input){
 }
 
 let learned = new Set();
+/* Countries currently missed - added on a wrong try or a "nie wiem",
+   cleared the moment they're answered right again. Session-only, same
+   as "learned" - it never survives a page refresh, matching the note
+   in the footer. Powers the "Tylko błędy" review toggle below. */
+let mistakes = new Set();
+let reviewMode = false;
 let askingPl = null;
 const byIso3 = new Map(COUNTRIES.map(c => [c.iso3, c]));
 
@@ -846,7 +1033,7 @@ function currentStats(){
   return modeStats[key];
 }
 
-const CONFETTI_COLORS = ['#8b5cf6', '#22d3ee', '#fbbf24', '#34d399', '#fb7185', '#a78bfa'];
+const CONFETTI_COLORS = [cssVar('--gold'), cssVar('--target'), cssVar('--learned'), cssVar('--ok'), cssVar('--bad'), cssVar('--gold-bright')];
 function spawnConfetti(){
   const field = document.getElementById('confettiField');
   field.innerHTML = '';
@@ -889,7 +1076,25 @@ function checkCompletion(){
 }
 
 function getActiveCountries(){
-  return COUNTRIES.filter(c => selectedContinents.has(c.continent));
+  let list = COUNTRIES.filter(c => selectedContinents.has(c.continent));
+  if(reviewMode) list = list.filter(c => mistakes.has(c.pl));
+  return list;
+}
+function mistakeCountInSelection(){
+  return COUNTRIES.filter(c => selectedContinents.has(c.continent) && mistakes.has(c.pl)).length;
+}
+function updateReviewModeUI(){
+  const btn = document.getElementById('reviewModeBtn');
+  if(!btn) return;
+  const count = mistakeCountInSelection();
+  if(reviewMode && count === 0) reviewMode = false; // nothing left to review - fall back automatically
+  btn.classList.toggle('active', reviewMode);
+  btn.disabled = count === 0;
+  btn.title = count === 0
+    ? 'Brak jeszcze żadnych pomyłek do powtórki w tym wyborze kontynentów'
+    : 'Pytaj tylko o państwa, które ostatnio pomyliłeś/aś, aż wszystkie znowu będą dobrze';
+  const countEl = document.getElementById('reviewModeCount');
+  if(countEl) countEl.textContent = count;
 }
 let gameStarted = false;
 
@@ -921,6 +1126,7 @@ function onContinentSelectionChanged(){
   refreshAll();
   renderList(document.getElementById('searchInput').value);
   updateProgress();
+  updateReviewModeUI();
   updateStatsText();
   if(!gameStarted) return;
   drawNextQuestion();
@@ -953,10 +1159,28 @@ function el(tag, attrs){
   return node;
 }
 
+// Raw SVG attributes (unlike CSS rules) can't resolve var(--x) themselves, so
+// anything drawn straight into the map (ocean fill, graticule lines) reads
+// the theme's actual color here instead of hardcoding it — swap the CSS
+// theme and these follow automatically.
+function cssVar(name){
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+function hexToRgbTriplet(hex){
+  const h = hex.replace('#','');
+  const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+  return `${r},${g},${b}`;
+}
+function themeRgba(varName, alpha){
+  return `rgba(${hexToRgbTriplet(cssVar(varName))},${alpha})`;
+}
+
 let mapMode = null;           // 'borders' | 'dots'
 let svgEl = null, zoomG = null;                    // dots mode
 let mapInstance = null, zoomBehaviorD3 = null, zoomGroupD3 = null; // borders mode
 let view = { scale: 1, tx: 0, ty: 0 };             // dots mode pan/zoom state
+let missingBorderShapes = new Set();  // pl names with no renderable shape in borders mode (e.g. tiny island states)
+let fallbackPinsG = null;             // borders-mode overlay group holding pins for those countries
 
 function initMap(){
   const container = document.getElementById('mapContainer');
@@ -973,6 +1197,23 @@ function initMap(){
   mapMode = 'dots';
 }
 
+// Datamaps exposes lat/lon -> pixel conversion in slightly different ways
+// across builds/plugins; try the known variants and use whichever works.
+function projectOnBorderMap(dm, lat, lon){
+  const attempts = [
+    () => dm.projection([lon, lat]),
+    () => (dm.path && typeof dm.path.projection === 'function') ? dm.path.projection()([lon, lat]) : null,
+    () => (typeof dm.latLngToXY === 'function') ? dm.latLngToXY(lat, lon) : null
+  ];
+  for(const attempt of attempts){
+    try{
+      const xy = attempt();
+      if(Array.isArray(xy) && Number.isFinite(xy[0]) && Number.isFinite(xy[1])) return xy;
+    }catch(e){}
+  }
+  return null;
+}
+
 function buildBorderMap(container){
   container.innerHTML = '';
   const initialData = {};
@@ -980,10 +1221,10 @@ function buildBorderMap(container){
   mapInstance = new Datamap({
     element: container,
     responsive: true,
-    fills: { defaultFill:'#2a2447', TARGET:'#22d3ee', LEARNED:'#fbbf24', ASKING:'#34d399', EXCLUDED:'#2a2447' },
+    fills: { defaultFill:cssVar('--land'), TARGET:cssVar('--target'), LEARNED:cssVar('--learned'), ASKING:cssVar('--asking'), EXCLUDED:cssVar('--land') },
     data: initialData,
     geographyConfig: {
-      borderColor:'#120f1e',
+      borderColor:cssVar('--ink'),
       borderWidth:0.6,
       highlightOnHover:false,
       popupOnHover:false
@@ -1001,6 +1242,60 @@ function buildBorderMap(container){
           zoomGroupD3.attr('transform', `translate(${d3.event.translate})scale(${d3.event.scale})`);
         });
         dm.svg.call(zoomBehaviorD3);
+      }catch(e){}
+      // Datamaps' bundled world topology omits many small/island nations (a
+      // known upstream limitation). Any of our 99 countries with no
+      // renderable shape gets a small fallback pin instead, so it can still
+      // be highlighted, flown-to and clicked like every other country.
+      try{
+        const presentIso3 = new Set();
+        dm.svg.selectAll('.datamaps-subunit').each(function(d){
+          if(!d || !d.id) return;
+          // A country can have an entry in the topology (so `d.id` exists)
+          // but an empty/degenerate geometry left over after simplification —
+          // a known issue for very small or scattered island nations (e.g.
+          // Seychelles: several tiny islands spread across open ocean). That
+          // renders as an invisible, unclickable shape even though it looks
+          // "present" by id, so treat "no actual pixels on screen" the same
+          // as "not present" and give it a fallback pin too.
+          let hasArea = false;
+          try{
+            const bbox = this.getBBox();
+            hasArea = !!(bbox && bbox.width > 0 && bbox.height > 0);
+          }catch(e){ hasArea = true; } // if getBBox itself throws, don't second-guess — assume it's fine
+          if(hasArea) presentIso3.add(d.id);
+        });
+        missingBorderShapes = new Set();
+        COUNTRIES.forEach(c => { if(!presentIso3.has(c.iso3)) missingBorderShapes.add(c.pl); });
+        if(missingBorderShapes.size && zoomGroupD3 && zoomGroupD3.node()){
+          // Datamaps' internal coordinate system is NOT the same scale as our
+          // dots-mode viewBox, so a hardcoded pixel radius here can render as
+          // a huge (or invisible) blob. Derive the radius from the map's own
+          // actual coordinate width instead, so it always comes out as a
+          // small, correctly-proportioned dot regardless of that scale.
+          let svgUnitWidth = 960;
+          try{
+            const svgNode = dm.svg.node();
+            const vb = svgNode.viewBox && svgNode.viewBox.baseVal;
+            if(vb && vb.width) svgUnitWidth = vb.width;
+            else if(svgNode.getAttribute('width')) svgUnitWidth = parseFloat(svgNode.getAttribute('width')) || svgUnitWidth;
+            else svgUnitWidth = svgNode.getBoundingClientRect().width || svgUnitWidth;
+          }catch(e){}
+          const fallbackPinR = Math.max(2, svgUnitWidth * 0.006);
+          fallbackPinsG = el('g', { id:'fallbackPinsG' });
+          zoomGroupD3.node().appendChild(fallbackPinsG);
+          COUNTRIES.forEach(c => {
+            if(!missingBorderShapes.has(c.pl)) return;
+            try{
+              const xy = projectOnBorderMap(dm, c.lat, c.lon);
+              if(!xy) return;
+              const circle = el('circle', { cx:xy[0], cy:xy[1], r:fallbackPinR, class:'pin fallback-pin target' });
+              circle.dataset.pl = c.pl;
+              circle.addEventListener('click', () => { toggleLearned(c); flashPin(c.pl); });
+              fallbackPinsG.appendChild(circle);
+            }catch(e){}
+          });
+        }
       }catch(e){}
       refreshAll();
     }
@@ -1030,7 +1325,7 @@ function buildDotsMap(container){
   }
   let d = "M " + rightPts.map(p => p.join(",")).join(" L ");
   d += " L " + leftPts.slice().reverse().map(p => p.join(",")).join(" L ") + " Z";
-  zoomG.appendChild(el('path', { d, fill:'#1b1732', stroke:'rgba(139,92,246,0.3)', 'stroke-width':'1' }));
+  zoomG.appendChild(el('path', { d, fill:cssVar('--ocean'), stroke:themeRgba('--gold',0.3), 'stroke-width':'1' }));
 
   for(let lat = -75; lat <= 75; lat += 15){
     const latR = lat * Math.PI / 180;
@@ -1038,7 +1333,7 @@ function buildDotsMap(container){
     const y = CY - latR * PSCALE;
     zoomG.appendChild(el('line', {
       x1: CX - halfW, x2: CX + halfW, y1: y, y2: y,
-      stroke:'rgba(139,92,246,0.16)', 'stroke-width':'0.6'
+      stroke:themeRgba('--gold',0.16), 'stroke-width':'0.6'
     }));
   }
   for(let lon = -180; lon <= 180; lon += 15){
@@ -1050,14 +1345,14 @@ function buildDotsMap(container){
     const dm = "M " + pts.map(p => p.join(",")).join(" L ");
     zoomG.appendChild(el('path', {
       d: dm, fill:'none',
-      stroke: (lon === 0) ? 'rgba(139,92,246,0.35)' : 'rgba(139,92,246,0.16)',
+      stroke: (lon === 0) ? themeRgba('--gold',0.35) : themeRgba('--gold',0.16),
       'stroke-width': (lon === 0) ? '0.9' : '0.6'
     }));
   }
   const eqPts = [project(0,-180), project(0,180)];
   zoomG.appendChild(el('line', {
     x1:eqPts[0][0], y1:eqPts[0][1], x2:eqPts[1][0], y2:eqPts[1][1],
-    stroke:'rgba(139,92,246,0.3)', 'stroke-width':'0.9'
+    stroke:themeRgba('--gold',0.3), 'stroke-width':'0.9'
   }));
 
   const pinsG = el('g', { id:'pinsG' });
@@ -1163,12 +1458,28 @@ function refreshAll(){
       const askingCountry = askingPl ? COUNTRIES.find(x => x.pl === askingPl) : null;
       mapInstance.svg.selectAll('.datamaps-subunit')
         .classed('asking-glow', d => askingCountry && d.id === askingCountry.iso3);
+      if(fallbackPinsG){
+        fallbackPinsG.querySelectorAll('.pin').forEach(elx => {
+          const pl = elx.dataset.pl;
+          elx.classList.remove('target','learned','asking','excluded');
+          if(!activeSet.has(pl)){
+            elx.classList.add('excluded');
+          }else if(askingPl === pl){
+            elx.classList.add('asking');
+          }else{
+            elx.classList.add(learned.has(pl) ? 'learned' : 'target');
+          }
+        });
+      }
     }catch(e){}
   }
 }
 function flashPin(pl){
-  if(mapMode !== 'dots') return;
-  const elx = zoomG.querySelector(`.pin[data-pl="${CSS.escape(pl)}"]`);
+  let root = null;
+  if(mapMode === 'dots') root = zoomG;
+  else if(mapMode === 'borders') root = fallbackPinsG;
+  if(!root) return;
+  const elx = root.querySelector(`.pin[data-pl="${CSS.escape(pl)}"]`);
   if(!elx) return;
   elx.classList.add('flash');
   setTimeout(() => elx.classList.remove('flash'), 1200);
@@ -1262,12 +1573,28 @@ function flyToCountry(country){
   if(mapMode === 'borders'){
     if(!mapInstance || !zoomBehaviorD3 || !zoomGroupD3) return;
     try{
-      const sel = mapInstance.svg.selectAll('.datamaps-subunit').filter(d => d.id === country.iso3);
-      if(sel.empty()) return;
-      const centroid = mapInstance.path.centroid(sel.datum());
+      let cx, cy;
+      if(missingBorderShapes.has(country.pl)){
+        // no renderable shape (e.g. a small island nation) — fly to its fallback pin instead
+        const xy = projectOnBorderMap(mapInstance, country.lat, country.lon);
+        if(!xy) return;
+        cx = xy[0]; cy = xy[1];
+      }else{
+        const sel = mapInstance.svg.selectAll('.datamaps-subunit').filter(d => d.id === country.iso3);
+        const centroid = sel.empty() ? null : mapInstance.path.centroid(sel.datum());
+        if(centroid && Number.isFinite(centroid[0]) && Number.isFinite(centroid[1])){
+          cx = centroid[0]; cy = centroid[1];
+        }else{
+          // shape technically exists but produced a degenerate (NaN) centroid —
+          // fall back to projecting its raw lat/lon instead of giving up
+          const xy = projectOnBorderMap(mapInstance, country.lat, country.lon);
+          if(!xy) return;
+          cx = xy[0]; cy = xy[1];
+        }
+      }
       const rect = document.getElementById('mapContainer').getBoundingClientRect();
       const scale = 3.2;
-      const t = [rect.width/2 - scale*centroid[0], rect.height/2 - scale*centroid[1]];
+      const t = [rect.width/2 - scale*cx, rect.height/2 - scale*cy];
       zoomBehaviorD3.scale(scale).translate(t);
       zoomGroupD3.transition().duration(900).attr('transform', `translate(${t})scale(${scale})`);
     }catch(e){}
@@ -1325,6 +1652,26 @@ let quizCurrent = null;
 let questionCounter = 0;
 let seenSets = {};
 
+/* "Ile nowych, ile powtórki" slider in ustawienia - a direct percent dial
+   between drawing "nowe" (still not opanowane - ćwiczenie) and "stare"
+   (już opanowane - powtórka/test) countries, replacing what used to be
+   a fixed 75% bias. Remembered like the theme choice, since it's a
+   preference, not session progress. */
+const NEW_RATIO_STORAGE_KEY = "poznajSwiatNewRatio";
+function getNewRatio(){
+  try{
+    const v = parseInt(localStorage.getItem(NEW_RATIO_STORAGE_KEY), 10);
+    return Number.isFinite(v) ? Math.min(100, Math.max(0, v)) : 70;
+  }catch(e){ return 70; }
+}
+let newCountryPercent = getNewRatio();
+function setNewRatio(pct){
+  newCountryPercent = pct;
+  try{ localStorage.setItem(NEW_RATIO_STORAGE_KEY, String(pct)); }catch(e){}
+  const text = document.getElementById('newRatioText');
+  if(text) text.textContent = `${pct}% nowych`;
+}
+
 function pickNextCountry(){
   const active = getActiveCountries();
   if(active.length === 0) return null;
@@ -1332,15 +1679,20 @@ function pickNextCountry(){
   if(!seenSets[key]) seenSets[key] = new Set();
   const seen = seenSets[key];
 
-  const unseen = active.filter(c => !seen.has(c.pl));
-  const notLearned = active.filter(c => !learned.has(c.pl));
+  const notLearned = active.filter(c => !learned.has(c.pl)); // "nowe" - wciąż się uczysz
+  const learnedActive = active.filter(c => learned.has(c.pl)); // "stare" - już opanowane, do powtórki/testu
   questionCounter++;
 
-  let pool = active;
-  if(unseen.length > 0 && Math.random() < 0.75){
-    pool = unseen; // strong bias toward countries never drawn yet in this mode
-  }else if(notLearned.length > 0 && questionCounter % 2 === 0){
-    pool = notLearned; // otherwise, every 2nd question leans on what's still not mastered
+  let pool;
+  const wantsNew = Math.random() * 100 < newCountryPercent;
+  if(wantsNew && notLearned.length > 0){
+    const unseenNew = notLearned.filter(c => !seen.has(c.pl));
+    pool = unseenNew.length > 0 ? unseenNew : notLearned; // within "nowe", still favor never-drawn ones first
+  }else if(!wantsNew && learnedActive.length > 0){
+    pool = learnedActive;
+  }else{
+    // the side we rolled is empty (e.g. nothing learned yet, or everything is learned) - use whatever exists
+    pool = notLearned.length > 0 ? notLearned : (learnedActive.length > 0 ? learnedActive : active);
   }
   // avoid repeating the exact same country twice in a row when we have another option
   let candidates = pool.filter(c => !quizCurrent || c.pl !== quizCurrent.pl);
@@ -1595,6 +1947,22 @@ countryInputEl.addEventListener("blur", () => suggestBox.classList.remove("show"
 const quizForm = document.getElementById("quizForm");
 const quizFeedback = document.getElementById("quizFeedback");
 
+/* Small, tasteful motion for the answer feedback: the message text
+   re-animates in every time it changes, and a wrong field gets a
+   quick shake — pure animation, never a hover color change. */
+function setFeedback(text, cls){
+  quizFeedback.textContent = text;
+  quizFeedback.className = cls;
+  quizFeedback.classList.remove("flash-in");
+  void quizFeedback.offsetWidth;
+  quizFeedback.classList.add("flash-in");
+}
+function shakeField(el){
+  el.classList.remove("shake");
+  void el.offsetWidth;
+  el.classList.add("shake");
+}
+
 let wrongCountryAttempts = 0;
 let requireCountry = true;
 let requireCapital = true;
@@ -1614,8 +1982,9 @@ function checkAnswer(){
     if(!countryVal.trim()) return;
     typedCountry = findCountry(countryVal);
     if(!typedCountry){
-      quizFeedback.textContent = `Nie znaleziono państwa „${countryVal}” na liście 99 państw — sprawdź pisownię.`;
-      quizFeedback.className = "mark-feedback bad";
+      setFeedback(`Nie znaleziono państwa „${countryVal}” na liście 99 państw. Sprawdź pisownię.`, "mark-feedback bad");
+      shakeField(document.getElementById("quizCountryInput"));
+      mistakes.add(quizCurrent.pl); updateReviewModeUI();
       return;
     }
     if(typedCountry.pl !== quizCurrent.pl){
@@ -1626,18 +1995,18 @@ function checkAnswer(){
         updateStatsText();
       }
       if(wrongCountryAttempts >= 2){
-        quizFeedback.textContent = `„${typedCountry.pl}” to prawidłowe państwo, ale to nie to, które jest teraz zaznaczone na mapie (szukaj zielonej, pulsującej plamki — możesz też kliknąć „Przybliż to miejsce”). Podpowiedź: zaznaczone państwo to ${quizCurrent.flag} ${quizCurrent.pl}. ${requireCapital ? 'Wpisz je i podaj stolicę.' : 'Wpisz je, aby zaliczyć.'}`;
+        setFeedback(`„${typedCountry.pl}” to prawidłowe państwo, ale to nie to, które jest teraz zaznaczone na mapie (szukaj zielonej, pulsującej plamki, albo kliknij „Przybliż to miejsce”). Podpowiedź: zaznaczone państwo to ${quizCurrent.flag} ${quizCurrent.pl}. ${requireCapital ? 'Wpisz je i podaj stolicę.' : 'Wpisz je, aby zaliczyć.'}`, "mark-feedback bad");
       }else{
-        quizFeedback.textContent = `„${typedCountry.pl}” to prawidłowe państwo, ale to nie to, które jest teraz zaznaczone na mapie. Poszukaj zielonej, pulsującej plamki i spróbuj jeszcze raz.`;
+        setFeedback(`„${typedCountry.pl}” to prawidłowe państwo, ale to nie to, które jest teraz zaznaczone na mapie. Poszukaj zielonej, pulsującej plamki i spróbuj jeszcze raz.`, "mark-feedback bad");
       }
-      quizFeedback.className = "mark-feedback bad";
+      shakeField(document.getElementById("quizCountryInput"));
+      mistakes.add(quizCurrent.pl); updateReviewModeUI();
       return;
     }
   }
   if(requireCapital && !capitalVal.trim()){
     if(requireCountry){
-      quizFeedback.textContent = `Dobrze, to ${typedCountry.pl} — teraz wpisz jego stolicę.`;
-      quizFeedback.className = "mark-feedback";
+      setFeedback(`Dobrze, to ${typedCountry.pl}. Teraz wpisz jego stolicę.`, "mark-feedback");
       document.getElementById("quizCapitalInput").focus();
     }
     return;
@@ -1658,6 +2027,7 @@ function checkAnswer(){
       const box = document.getElementById('globalError');
       if(box){ box.style.display = 'block'; box.textContent = 'Błąd mapy (wynik i tak się liczy): ' + err.message; }
     }
+    mistakes.delete(quizCurrent.pl); updateReviewModeUI();
     s.correct++;
     s.streak++;
     if(s.streak > s.bestStreak){ s.bestStreak = s.streak; popStat('bestStreakText'); }
@@ -1666,14 +2036,14 @@ function checkAnswer(){
     popStat('quizScoreText'); popStat('streakText'); popStat('pointsText');
     checkCompletion();
     showReveal(quizCurrent, "correct");
-    quizFeedback.textContent = `Dobrze! Losuję kolejne państwo…`;
-    quizFeedback.className = "mark-feedback ok";
+    setFeedback(`Dobrze! Losuję kolejne państwo…`, "mark-feedback ok");
     setTimeout(() => { drawNextQuestion(); }, 2200);
   }else{
     s.streak = 0;
     updateStatsText();
-    quizFeedback.textContent = `To nie jest poprawna stolica dla ${quizCurrent.pl}. Spróbuj jeszcze raz.`;
-    quizFeedback.className = "mark-feedback bad";
+    setFeedback(`To nie jest poprawna stolica dla ${quizCurrent.pl}. Spróbuj jeszcze raz.`, "mark-feedback bad");
+    shakeField(document.getElementById("quizCapitalInput"));
+    mistakes.add(quizCurrent.pl); updateReviewModeUI();
     document.getElementById("quizCapitalInput").value = "";
     document.getElementById("quizCapitalInput").focus();
   }
@@ -1714,6 +2084,43 @@ document.getElementById("requireCapitalCheck").addEventListener("change", e => {
   quizFeedback.textContent = "";
   quizFeedback.className = "mark-feedback";
 });
+
+/* ---- day / night appearance: auto by local time (dzień 8:00-21:00,
+   noc w reszcie), or a manual override, remembered for next time.
+   One fixed look per mode - the blue "Modern" palette for day, the
+   blue "Nokturn" palette for night. No sub-styles to pick between. ---- */
+const THEME_STORAGE_KEY = "poznajSwiatTheme";
+function getAutoTheme(){
+  const h = new Date().getHours();
+  return (h >= 8 && h < 21) ? "light" : "dark";
+}
+function getThemeMode(){
+  try{ return localStorage.getItem(THEME_STORAGE_KEY) || "auto"; }
+  catch(e){ return "auto"; }
+}
+function applyTheme(){
+  const mode = getThemeMode();
+  const effective = mode === "auto" ? getAutoTheme() : mode;
+  document.documentElement.setAttribute("data-theme", effective);
+}
+function updateThemeButtons(){
+  const mode = getThemeMode();
+  document.querySelectorAll(".theme-mode-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
+  });
+}
+function setThemeMode(mode){
+  try{ localStorage.setItem(THEME_STORAGE_KEY, mode); }catch(e){}
+  applyTheme();
+  updateThemeButtons();
+}
+document.querySelectorAll(".theme-mode-btn").forEach(btn => {
+  btn.addEventListener("click", () => setThemeMode(btn.dataset.mode));
+});
+updateThemeButtons();
+applyTheme();
+// keep "auto" correct if the page stays open across the 8:00 / 21:00 switch
+setInterval(applyTheme, 60000);
 
 function tabCompleteFromCandidates(inputEl, candidates){
   const typed = inputEl.value;
@@ -1768,6 +2175,7 @@ document.getElementById("quizSkipBtn").addEventListener("click", () => {
   s.streak = 0;
   s.total++;
   updateStatsText(); popStat('quizScoreText');
+  mistakes.add(quizCurrent.pl); updateReviewModeUI();
   showReveal(quizCurrent, "skip");
   quizFeedback.textContent = `Losuję kolejne państwo…`;
   quizFeedback.className = "mark-feedback";
@@ -1830,7 +2238,12 @@ function renderList(filter=""){
     box.innerHTML = `<div style="padding:16px;text-align:center;color:var(--muted);font-size:0.85rem;">Brak wyników.</div>`;
   }
 }
-document.getElementById("searchInput").addEventListener("input", e => renderList(e.target.value));
+let searchDebounceTimer = null;
+document.getElementById("searchInput").addEventListener("input", e => {
+  const val = e.target.value;
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(() => renderList(val), 120);
+});
 
 const resetProgressBtn = document.getElementById("resetProgressBtn");
 let resetArmed = false;
@@ -1896,9 +2309,18 @@ document.getElementById("startContinentNoneBtn").addEventListener("click", () =>
   selectedContinents = new Set();
   onContinentSelectionChanged();
 });
+document.getElementById("reviewModeBtn").addEventListener("click", () => {
+  reviewMode = !reviewMode;
+  onContinentSelectionChanged();
+});
+const newRatioSlider = document.getElementById("newRatioSlider");
+newRatioSlider.value = newCountryPercent;
+setNewRatio(newCountryPercent);
+newRatioSlider.addEventListener("input", () => setNewRatio(parseInt(newRatioSlider.value, 10)));
 
 renderList();
 updateProgress();
+updateReviewModeUI();
 refreshAll();
 
 /* ---------------------------------------------------------------
@@ -2035,7 +2457,7 @@ function checkFlashType(){
   }
   if(correct){
     markLearned(c);
-    feedback.textContent = `Dobrze! ${c.flag} ${c.pl} — ${c.capital}.`;
+    feedback.textContent = `Dobrze! ${c.flag} ${c.pl}: ${c.capital}.`;
     feedback.className = "mark-feedback ok";
     document.getElementById("flashTypeInput").disabled = true;
     setTimeout(() => {
